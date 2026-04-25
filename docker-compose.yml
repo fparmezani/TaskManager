@@ -35,10 +35,11 @@ services:
     entrypoint: /bin/bash
     command: /ollama-entrypoint.sh
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      test: ["CMD-SHELL", "curl -f http://localhost:11434/api/tags || wget -qO- http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
 
   # Database Initialization
   sqlserver-init:
@@ -64,7 +65,7 @@ services:
       sqlserver-init:
         condition: service_completed_successfully
       ollama:
-        condition: service_healthy
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=TaskManagerDb;User Id=sa;Password=Your_strong_password123;TrustServerCertificate=True;"

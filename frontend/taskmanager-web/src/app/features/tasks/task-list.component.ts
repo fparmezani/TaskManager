@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { DatePipe, NgClass, NgFor, NgIf } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TaskService } from '../../core/services/task.service';
 import { CreateTaskRequest, TaskItem, TaskStatus } from '../../core/models/task.models';
@@ -34,7 +34,8 @@ import { AiSuggestionDialogComponent } from './ai-suggestion-dialog.component';
 
           <div>
             <label class="text-sm font-semibold text-slate-700" for="dueDate">Due date</label>
-            <input id="dueDate" type="date" formControlName="dueDate" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900" />
+            <input id="dueDate" type="date" formControlName="dueDate" [min]="todayIso" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900" />
+            <p *ngIf="form.get('dueDate')?.errors?.['pastDate'] && form.get('dueDate')?.touched" class="mt-1 text-xs text-red-600">Due date cannot be in the past.</p>
           </div>
 
           <div *ngIf="error" class="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{{ error }}</div>
@@ -117,12 +118,21 @@ export class TaskListComponent implements OnInit {
   protected isSaving = false;
   protected error = '';
   protected showAiDialog = false;
+  protected readonly todayIso = new Date().toISOString().substring(0, 10);
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(120)]],
     description: ['', [Validators.required, Validators.maxLength(1000)]],
-    dueDate: ['', [Validators.required]]
+    dueDate: ['', [Validators.required, TaskListComponent.minDateToday]]
   });
+
+  private static minDateToday(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selected = new Date(control.value + 'T00:00:00');
+    return selected < today ? { pastDate: true } : null;
+  }
 
   ngOnInit(): void {
     this.loadTasks();
@@ -157,7 +167,9 @@ export class TaskListComponent implements OnInit {
         this.resetForm();
         this.loadTasks();
       },
-      error: () => (this.error = 'Could not save task. Check the required fields and due date.')
+      error: (err) => {
+        this.error = err?.error?.message ?? 'Could not save task. Check the required fields and due date.';
+      }
     });
   }
 

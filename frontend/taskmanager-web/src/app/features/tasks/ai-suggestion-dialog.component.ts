@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AiSuggestionService } from '../../core/services/ai-suggestion.service';
@@ -36,8 +36,8 @@ import { AiSuggestionService } from '../../core/services/ai-suggestion.service';
         </div>
 
         <div class="flex gap-3 justify-end">
-          <button 
-            (click)="onClose()"
+          <button
+            (click)="onClose.emit()"
             class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
           >
             Close
@@ -65,14 +65,14 @@ import { AiSuggestionService } from '../../core/services/ai-suggestion.service';
 export class AiSuggestionDialogComponent implements OnInit {
   private readonly aiService = inject(AiSuggestionService);
 
-  taskTitle = '';
+  @Input() taskTitle = '';
+  @Output() onClose = new EventEmitter<void>();
+  @Output() onSuggestionSelected = new EventEmitter<string>();
+
   suggestion = '';
   loading = false;
   error = '';
   isAvailable = false;
-
-  onClose: () => void = () => {};
-  onSuggestionSelected: (suggestion: string) => void = () => {};
 
   ngOnInit() {
     this.checkAiAvailability();
@@ -116,11 +116,11 @@ export class AiSuggestionDialogComponent implements OnInit {
   }
 
   useSuggestion() {
-    this.onSuggestionSelected(this.suggestion);
-    this.onClose();
+    this.onSuggestionSelected.emit(this.suggestion);
+    this.onClose.emit();
   }
 
   onBackdropClick() {
-    this.onClose();
+    this.onClose.emit();
   }
 }

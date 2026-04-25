@@ -19,13 +19,18 @@ As a user, I want to manage my personal tasks so that I can track my work and de
 ## Repository Layout
 
 ```text
-TaskManager.Interview/
- ├── src/                         # .NET backend projects
+TaskManager/
+ ├── backend/                     # .NET backend projects
+ │   ├── TaskManager.Api/         # Controllers, Middleware
+ │   ├── TaskManager.Application/ # Services, DTOs, Interfaces
+ │   ├── TaskManager.Domain/      # Entities, Enums, Exceptions
+ │   └── TaskManager.Infrastructure/ # Repositories, Security, Data
  ├── tests/                       # Unit, Integration, and API tests
- ├── frontend/taskmanager-web/     # Angular frontend
+ ├── frontend/taskmanager-web/    # Angular frontend
  ├── database/                    # SQL Server init and seed scripts
+ ├── docker/                      # Dockerfiles for API and frontend
  ├── docs/                        # GenAI, review, testing, and presentation notes
- └── docker-compose.yml           # SQL Server + API + Angular frontend
+ └── docker-compose.yml           # SQL Server + API + Angular + Ollama
 ```
 
 ## Architecture
@@ -130,9 +135,9 @@ dotnet test tests/TaskManager.ApiTests/TaskManager.ApiTests.csproj
 
 See:
 
-- `docs/code-generation.md`
-- `docs/review.md`
-- `docs/testing.md`
-- `docs/presentation.md`
+- `docs/prompt-history.md` — histórico completo de prompts, outputs, validações e correções
+- `docs/code-generation.md` — regras de aceitação de código gerado por AI
+- `docs/review.md` — checklist de revisão
+- `docs/presentation.md` — notas para a apresentação
 
 These files document the AI prompt strategy, validation process, corrections, edge cases, and review checklist.

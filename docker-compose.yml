@@ -19,6 +19,27 @@ services:
     networks:
       - taskmanager-network
 
+  # Ollama AI Service (for task description suggestions)
+  ollama:
+    image: ollama/ollama:latest
+    container_name: taskmanager-ollama
+    ports:
+      - "11434:11434"
+    environment:
+      OLLAMA_HOST: "0.0.0.0:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./docker/ollama-entrypoint.sh:/ollama-entrypoint.sh:ro
+    networks:
+      - taskmanager-network
+    entrypoint: /bin/bash
+    command: /ollama-entrypoint.sh
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   # Database Initialization
   sqlserver-init:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -42,6 +63,8 @@ services:
     depends_on:
       sqlserver-init:
         condition: service_completed_successfully
+      ollama:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=TaskManagerDb;User Id=sa;Password=Your_strong_password123;TrustServerCertificate=True;"
@@ -72,3 +95,4 @@ networks:
 
 volumes:
   sqlserver_data:
+  ollama_data:

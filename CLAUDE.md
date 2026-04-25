@@ -165,6 +165,24 @@ LoginAsync_Should_Fail_When_Password_Is_Invalid
 
 ---
 
+### 8. [ai-integration.md](docs/ai-integration.md)
+**Purpose**: AI Integration with Ollama for Task Suggestions  
+**Contains**:
+- Ollama setup and configuration
+- Mistral 7B model details
+- Frontend AI suggestion dialog
+- Backend AI service architecture
+- API endpoints for AI features
+- Troubleshooting guide
+
+**Features**:
+- ✨ AI suggestion button in task creation
+- 🧠 Automatic description generation
+- 🚀 Fully local - no external dependencies
+- 🔐 Secure and private
+
+---
+
 ## 🚀 Quick Start
 
 ### Prerequisites

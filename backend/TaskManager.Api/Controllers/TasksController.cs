@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskManager.Api.Extensions;
+using TaskManager.Application.Abstractions;
+using TaskManager.Application.AI;
 using TaskManager.Application.Tasks;
 
 namespace TaskManager.Api.Controllers;
@@ -11,10 +13,12 @@ namespace TaskManager.Api.Controllers;
 public sealed class TasksController : ControllerBase
 {
     private readonly TaskService _taskService;
+    private readonly IAiSuggestionService _aiSuggestionService;
 
-    public TasksController(TaskService taskService)
+    public TasksController(TaskService taskService, IAiSuggestionService aiSuggestionService)
     {
         _taskService = taskService;
+        _aiSuggestionService = aiSuggestionService;
     }
 
     [HttpGet]
@@ -57,5 +61,29 @@ public sealed class TasksController : ControllerBase
     {
         await _taskService.DeleteAsync(id, User.GetUserId(), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("suggestions/description")]
+    public async Task<IActionResult> SuggestDescription([FromQuery] string title, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(title))
+            return BadRequest(new { message = "Title is required" });
+
+        try
+        {
+            var suggestion = await _aiSuggestionService.SuggestDescriptionAsync(title, cancellationToken);
+            return Ok(new AiSuggestionResponse(suggestion));
+        }
+        catch (InvalidOperationException ex)
+        {
+            return StatusCode(503, new { message = "AI service is unavailable", error = ex.Message });
+        }
+    }
+
+    [HttpGet("suggestions/available")]
+    public async Task<IActionResult> CheckAiAvailability(CancellationToken cancellationToken)
+    {
+        var available = await _aiSuggestionService.IsAvailableAsync(cancellationToken);
+        return Ok(new { available });
     }
 }

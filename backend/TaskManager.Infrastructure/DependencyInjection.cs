@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TaskManager.Application.Abstractions;
+using TaskManager.Infrastructure.AI;
 using TaskManager.Infrastructure.Data;
 using TaskManager.Infrastructure.Repositories;
 using TaskManager.Infrastructure.Security;
@@ -20,6 +21,13 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, SqlUserRepository>();
         services.AddScoped<IPasswordHasher, Pbkdf2PasswordHasher>();
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        // Add Ollama AI service
+        services.AddHttpClient<IAiSuggestionService, OllamaAiSuggestionService>()
+            .ConfigureHttpClient(client =>
+            {
+                client.Timeout = TimeSpan.FromSeconds(30);
+            });
 
         return services;
     }

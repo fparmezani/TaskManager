@@ -4,11 +4,12 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { TaskService } from '../../core/services/task.service';
 import { CreateTaskRequest, TaskItem, TaskStatus } from '../../core/models/task.models';
+import { AiSuggestionDialogComponent } from './ai-suggestion-dialog.component';
 
 @Component({
   selector: 'app-task-list',
   standalone: true,
-  imports: [ReactiveFormsModule, NgFor, NgIf, NgClass, DatePipe],
+  imports: [ReactiveFormsModule, NgFor, NgIf, NgClass, DatePipe, AiSuggestionDialogComponent],
   template: `
     <section class="grid gap-6 lg:grid-cols-[380px_1fr]">
       <aside class="rounded-2xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
@@ -18,7 +19,12 @@ import { CreateTaskRequest, TaskItem, TaskStatus } from '../../core/models/task.
         <form class="mt-6 space-y-4" [formGroup]="form" (ngSubmit)="save()">
           <div>
             <label class="text-sm font-semibold text-slate-700" for="title">Title</label>
-            <input id="title" formControlName="title" class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900" />
+            <div class="flex gap-2">
+              <input id="title" formControlName="title" class="flex-1 mt-1 rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-slate-900" />
+              <button type="button" (click)="openAiDialog()" class="mt-1 px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700" title="Generate description with AI">
+                ✨ AI
+              </button>
+            </div>
           </div>
 
           <div>
@@ -90,6 +96,13 @@ import { CreateTaskRequest, TaskItem, TaskStatus } from '../../core/models/task.
         </div>
       </div>
     </section>
+
+    <app-ai-suggestion-dialog 
+      *ngIf="showAiDialog"
+      [taskTitle]="form.value.title || ''"
+      (onClose)="closeAiDialog()"
+      (onSuggestionSelected)="useSuggestion($event)"
+    ></app-ai-suggestion-dialog>
   `
 })
 export class TaskListComponent implements OnInit {
@@ -103,6 +116,7 @@ export class TaskListComponent implements OnInit {
   protected isLoading = false;
   protected isSaving = false;
   protected error = '';
+  protected showAiDialog = false;
 
   protected readonly form = this.fb.nonNullable.group({
     title: ['', [Validators.required, Validators.maxLength(120)]],
@@ -206,6 +220,18 @@ export class TaskListComponent implements OnInit {
       default:
         return 'bg-slate-100 text-slate-700';
     }
+  }
+
+  protected openAiDialog(): void {
+    this.showAiDialog = true;
+  }
+
+  protected closeAiDialog(): void {
+    this.showAiDialog = false;
+  }
+
+  protected useSuggestion(suggestion: string): void {
+    this.form.patchValue({ description: suggestion });
   }
 
   private buildRequest(): CreateTaskRequest {
